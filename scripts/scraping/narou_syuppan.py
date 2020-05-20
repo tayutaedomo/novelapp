@@ -79,6 +79,6 @@ if __name__ == '__main__':
         print(book)
 
     # Capture
-    file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'tmp', 'capture.png')
+    file_path = os.path.join(ROOT_PATH, 'tmp', 'capture.png')
     driver.save_screenshot(file_path)
 
