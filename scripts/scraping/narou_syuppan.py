@@ -3,8 +3,9 @@ import urllib.request
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
-IMAGE_DIR_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'images')
-CSV_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'syuppan.csv')
+ROOT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
+IMAGE_DIR_PATH = os.path.join(ROOT_PATH, 'data', 'images')
+CSV_PATH = os.path.join(ROOT_PATH, 'data', 'syuppan.csv')
 
 
 def download_image(url, book_id):
