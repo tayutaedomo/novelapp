@@ -8,10 +8,10 @@ from selenium.webdriver.chrome.options import Options
 
 ROOT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
 SYUPPAN_CSV_PATH = os.path.join(ROOT_PATH, 'data', 'syuppan.csv')
-OUTPUT_CSV_PATH = os.path.join(ROOT_PATH, 'data', 'novels.csv')
+NOVELS_CSV_PATH = os.path.join(ROOT_PATH, 'data', 'novels.csv')
 
 
-def load_syuppan():
+def load_syuppan_csv():
     books = []
 
     with open(SYUPPAN_CSV_PATH, 'r', encoding='utf-8') as f:
@@ -24,7 +24,7 @@ def load_syuppan():
 def create_cache():
     cache = {}
 
-    with open(OUTPUT_CSV_PATH, 'r', encoding='utf-8') as f:
+    with open(NOVELS_CSV_PATH, 'r', encoding='utf-8') as f:
         for row in csv.reader(f):
             cache[row[0]] = row[1]  # { book_id: category, ... }
 
@@ -110,12 +110,12 @@ def append_novel_to_csv(book_id, category):
         category,
     )
 
-    with open(OUTPUT_CSV_PATH, 'a') as f:
+    with open(NOVELS_CSV_PATH, 'a') as f:
         f.write(csv_line + '\n')
 
 
 if __name__ == '__main__':
-    books = load_syuppan()
+    books = load_syuppan_csv()
     print(datetime.datetime.now().isoformat(), 'Count:', len(books))
 
     cache = create_cache()

@@ -2,12 +2,10 @@ import os
 import time
 import datetime
 import csv
-import urllib.request
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 ROOT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
-IMAGE_DIR_PATH = os.path.join(ROOT_PATH, 'data', 'images')
 SYUPPAN_CSV_PATH = os.path.join(ROOT_PATH, 'data', 'syuppan.csv')
 
 
@@ -60,9 +58,6 @@ def retrieve_books(page):
 
         book['time'] = now_str
 
-        # Image Download
-        # book['downloaded'] = download_image(book['image_url'], book['book_id'])
-
         books.append(book)
 
     return books
@@ -74,19 +69,6 @@ def scroll_down(driver):
 
     for x in range(scroll_y, height, scroll_y):
         driver.execute_script("window.scrollTo(0, "+str(x)+");")
-
-
-# def download_image(url, book_id):
-#     org_file_name = os.path.basename(url)
-#     dest_file_name = '{}_{}'.format(book_id, org_file_name)
-#     dest_path = os.path.join(IMAGE_DIR_PATH, dest_file_name)
-#     print(dest_path, os.path.exists(dest_path))
-#
-#     if os.path.exists(dest_path):
-#         return False    # Skip if already exits
-#     else:
-#         urllib.request.urlretrieve(url, dest_path)
-#         return True
 
 
 def append_book_to_csv(book):
