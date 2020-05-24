@@ -1,5 +1,8 @@
 import os
+import time
+import datetime
 import re
+import csv
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -10,6 +13,7 @@ OUTPUT_CSV_PATH = os.path.join(ROOT_PATH, 'data', 'novels.csv')
 
 def retrieve_ncode(driver, title):
     google_url = 'https://www.google.com/search?q=site:ncode.syosetu.com "{}"'.format(title)
+    print(datetime.datetime.now().isoformat(), 'GET:', google_url)
     driver.get(google_url)
 
     matched_elem = None
@@ -34,6 +38,7 @@ def retrieve_ncode(driver, title):
 
 def retrieve_novel_info(driver, ncode):
     info_top_url = 'https://ncode.syosetu.com/novelview/infotop/ncode/{}/"'.format(ncode)
+    print(datetime.datetime.now().isoformat(), 'GET:', info_top_url)
     driver.get(info_top_url)
 
     novel_info = {
@@ -71,18 +76,16 @@ def retrieve_novel_info(driver, ncode):
         novel_info['report'] = normalize_text(td_list[7])
         novel_info['public'] = normalize_text(td_list[8])
         novel_info['word_count'] = normalize_text(td_list[9])
+        novel_info['time'] = datetime.datetime.now().isoformat()
         novel_info['success'] = True
 
     return novel_info
 
 
-def append_novel_to_csv(book, novel):
-    csv_line = '"{}","{}","{}","{}","{}"'.format(
-        book[0],    # book_id
-        book[1],    # title
-        novel['ncode'],
-        novel['category'],
-        novel['keywords'],
+def append_novel_to_csv(book_id, category):
+    csv_line = '"{}","{}"'.format(
+        book_id,
+        category,
     )
 
     with open(OUTPUT_CSV_PATH, 'a') as f:
@@ -90,20 +93,22 @@ def append_novel_to_csv(book, novel):
 
 
 if __name__ == '__main__':
+    books = []
+    with open(SYUPPAN_CSV_PATH, 'r', encoding='utf-8') as f:
+        for row in csv.reader(f):
+            books.append(row)
+
+    print(datetime.datetime.now().isoformat(), 'Count:', len(books))
+
     options = Options()
     options.add_argument('--headless')
     options.add_argument('--incognito')
     driver = webdriver.Chrome(options=options)
 
-    # TODO: Load Syuppan book list from csv
-    # TODO: Debug code
-    books = [
-        ['4022', '悪役令嬢ですが攻略対象の様子が異常すぎる', 'https://syosetu.com/syuppan/view/bookid/4022/', 'https://m.media-amazon.com/images/I/51T1NYC6HsL.jpg']
-    ]
-
-    for book in books:
-        #ncode, elem = retrieve_ncode(driver, book[1])
-        ncode = 'n1080es'    # TODO: Debug code
+    for i, book in enumerate(books):
+        book_id = book[0]
+        title = book[1]
+        ncode, elem = retrieve_ncode(driver, book[1])
 
         if not ncode:
             print('Not found ncode.', book)
@@ -111,5 +116,9 @@ if __name__ == '__main__':
 
         novel = retrieve_novel_info(driver, ncode)
 
-        append_novel_to_csv(book, novel)
+        append_novel_to_csv(book_id, novel['category'])
+
+        if i < len(books) - 1:
+            print(datetime.datetime.now().isoformat(), 'Sleep(3)')
+            time.sleep(3)
 
