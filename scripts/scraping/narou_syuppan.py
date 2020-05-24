@@ -1,52 +1,41 @@
 import os
+import time
+import datetime
+import csv
 import urllib.request
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 ROOT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
 IMAGE_DIR_PATH = os.path.join(ROOT_PATH, 'data', 'images')
-CSV_PATH = os.path.join(ROOT_PATH, 'data', 'syuppan.csv')
+SYUPPAN_CSV_PATH = os.path.join(ROOT_PATH, 'data', 'syuppan.csv')
 
 
-def download_image(url, book_id):
-    org_file_name = os.path.basename(url)
-    dest_file_name = '{}_{}'.format(book_id, org_file_name)
-    dest_path = os.path.join(IMAGE_DIR_PATH, dest_file_name)
-    print(dest_path, os.path.exists(dest_path))
+def create_cache():
+    cache = {}
 
-    if os.path.exists(dest_path):
-        return False    # Skip if already exits
-    else:
-        urllib.request.urlretrieve(url, dest_path)
-        return True
+    with open(SYUPPAN_CSV_PATH, 'r', encoding='utf-8') as f:
+        for row in csv.reader(f):
+            cache[row[0]] = True  # { book_id: category, ... }
+
+    return cache
 
 
-def append_book_to_csv(book):
-    csv_line = '"{}","{}","{}","{}"'.format(
-        book['book_id'],
-        book['title'],
-        book['book_url'],
-        book['image_url']
-    )
+def retrieve_books(page):
+    books = []
 
-    with open(CSV_PATH, 'a') as f:
-        f.write(csv_line + '\n')
+    list_url = 'https://syosetu.com/syuppan/list/?p={}'.format(page)
+    print(datetime.datetime.now().isoformat(), 'GET:', list_url)
 
+    driver.get(list_url)
 
-if __name__ == '__main__':
-    options = Options()
-    options.add_argument('--headless')
-    options.add_argument('--incognito')
-    driver = webdriver.Chrome(options=options)
-
-    site_url = 'https://syosetu.com/syuppan/list/'
-    driver.get(site_url)
-
-    book_list = []
+    scroll_down(driver)
 
     item_elem_list = driver.find_elements_by_class_name('p-syuppan-list__item')
 
-    for item_elem in item_elem_list[:2]:
+    now_str = datetime.datetime.now().isoformat()
+
+    for item_elem in item_elem_list:
         book = {
             'title': '',
             'book_id': '',
@@ -69,14 +58,77 @@ if __name__ == '__main__':
             book['book_id'] = book['book_url'].replace('https://syosetu.com/syuppan/view/bookid/', '')
             book['book_id'] = book['book_id'].replace('/', '')
 
+        book['time'] = now_str
+
         # Image Download
-        book['downloaded'] = download_image(book['image_url'], book['book_id'])
+        # book['downloaded'] = download_image(book['image_url'], book['book_id'])
 
-        book_list.append(book)
+        books.append(book)
 
-        append_book_to_csv(book)
+    return books
 
-        print(book)
+
+def scroll_down(driver):
+    height = driver.execute_script("return document.body.scrollHeight")
+    scroll_y = 300
+
+    for x in range(scroll_y, height, scroll_y):
+        driver.execute_script("window.scrollTo(0, "+str(x)+");")
+
+
+# def download_image(url, book_id):
+#     org_file_name = os.path.basename(url)
+#     dest_file_name = '{}_{}'.format(book_id, org_file_name)
+#     dest_path = os.path.join(IMAGE_DIR_PATH, dest_file_name)
+#     print(dest_path, os.path.exists(dest_path))
+#
+#     if os.path.exists(dest_path):
+#         return False    # Skip if already exits
+#     else:
+#         urllib.request.urlretrieve(url, dest_path)
+#         return True
+
+
+def append_book_to_csv(book):
+    csv_line = '"{}","{}","{}","{}", "{}"'.format(
+        book['book_id'],
+        book['title'],
+        book['book_url'],
+        book['image_url'],
+        book['time'],
+    )
+
+    with open(SYUPPAN_CSV_PATH, 'a') as f:
+        f.write(csv_line + '\n')
+
+
+if __name__ == '__main__':
+    cache = create_cache()
+    print(datetime.datetime.now().isoformat(), 'Count:', len(cache))
+
+    options = Options()
+    options.add_argument('--headless')
+    options.add_argument('--incognito')
+    driver = webdriver.Chrome(options=options)
+
+    page_count = 2
+
+    for i in range(1, page_count + 1):
+        for book in retrieve_books(i):
+            book_id = book['book_id']
+
+            if cache.get(book_id):
+                print(datetime.datetime.now().isoformat(), 'Skip:', book_id)
+
+            else:
+                cache[book_id] = True
+                print(datetime.datetime.now().isoformat(), 'New :', book_id, book['title'])
+
+                append_book_to_csv(book)
+
+        if i < page_count:
+            print(datetime.datetime.now().isoformat(), 'Sleep(3)')
+            time.sleep(3)
 
     # Capture
     file_path = os.path.join(ROOT_PATH, 'tmp', 'capture.png')
