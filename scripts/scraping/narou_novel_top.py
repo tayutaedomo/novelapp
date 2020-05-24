@@ -1,6 +1,9 @@
 import os
 import requests
 
+ROOT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
+
+
 if __name__ == '__main__':
     ncode = 'n5378gc'
     url = 'https://ncode.syosetu.com/{}/'.format(ncode)
@@ -11,7 +14,7 @@ if __name__ == '__main__':
     #print(res.content)
     #print(res.text)
 
-    data_path = os.path.join(os.path.dirname(__file__), '..', 'data')
+    data_path = os.path.join(ROOT_PATH, 'data')
     save_path = '{}/narou_novel_top_{}.html'.format(data_path, ncode)
 
     with open(save_path, 'wb') as f:
