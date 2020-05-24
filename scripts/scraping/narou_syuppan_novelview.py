@@ -11,9 +11,30 @@ SYUPPAN_CSV_PATH = os.path.join(ROOT_PATH, 'data', 'syuppan.csv')
 OUTPUT_CSV_PATH = os.path.join(ROOT_PATH, 'data', 'novels.csv')
 
 
+def load_syuppan():
+    books = []
+
+    with open(SYUPPAN_CSV_PATH, 'r', encoding='utf-8') as f:
+        for row in csv.reader(f):
+            books.append(row)
+
+    return books
+
+
+def create_cache():
+    cache = {}
+
+    with open(OUTPUT_CSV_PATH, 'r', encoding='utf-8') as f:
+        for row in csv.reader(f):
+            cache[row[0]] = row[1]  # { book_id: category, ... }
+
+    return cache
+
+
 def retrieve_ncode(driver, title):
     google_url = 'https://www.google.com/search?q=site:ncode.syosetu.com "{}"'.format(title)
     print(datetime.datetime.now().isoformat(), 'GET:', google_url)
+
     driver.get(google_url)
 
     matched_elem = None
@@ -39,6 +60,7 @@ def retrieve_ncode(driver, title):
 def retrieve_novel_info(driver, ncode):
     info_top_url = 'https://ncode.syosetu.com/novelview/infotop/ncode/{}/"'.format(ncode)
     print(datetime.datetime.now().isoformat(), 'GET:', info_top_url)
+
     driver.get(info_top_url)
 
     novel_info = {
@@ -93,12 +115,11 @@ def append_novel_to_csv(book_id, category):
 
 
 if __name__ == '__main__':
-    books = []
-    with open(SYUPPAN_CSV_PATH, 'r', encoding='utf-8') as f:
-        for row in csv.reader(f):
-            books.append(row)
-
+    books = load_syuppan()
     print(datetime.datetime.now().isoformat(), 'Count:', len(books))
+
+    cache = create_cache()
+    print(datetime.datetime.now().isoformat(), 'Count:', len(cache))
 
     options = Options()
     options.add_argument('--headless')
@@ -107,18 +128,27 @@ if __name__ == '__main__':
 
     for i, book in enumerate(books):
         book_id = book[0]
-        title = book[1]
-        ncode, elem = retrieve_ncode(driver, book[1])
+        category = cache.get(book_id)
 
-        if not ncode:
-            print('Not found ncode.', book)
-            break
+        if category:
+            print(datetime.datetime.now().isoformat(), 'Skip:', book_id, category)
 
-        novel = retrieve_novel_info(driver, ncode)
+        else:
+            ncode, elem = retrieve_ncode(driver, book[1])
 
-        append_novel_to_csv(book_id, novel['category'])
+            if not ncode:
+                print('Not found ncode.', book)
+                break
 
-        if i < len(books) - 1:
-            print(datetime.datetime.now().isoformat(), 'Sleep(3)')
-            time.sleep(3)
+            novel = retrieve_novel_info(driver, ncode)
+
+            category = novel['category']
+            cache[str(book_id)] = category
+            print(datetime.datetime.now().isoformat(), 'New :', book_id, category)
+
+            append_novel_to_csv(book_id, category)
+
+            if i < len(books) - 1:
+                print(datetime.datetime.now().isoformat(), 'Sleep(3)')
+                time.sleep(3)
 
