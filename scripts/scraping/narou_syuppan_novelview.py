@@ -32,7 +32,7 @@ def create_cache():
 
 
 def retrieve_ncode(driver, title):
-    google_url = 'https://www.google.com/search?q=site:ncode.syosetu.com "{}"'.format(title)
+    google_url = 'https://www.google.com/search?q=site:ncode.syosetu.com {}'.format(title)
     print(datetime.datetime.now().isoformat(), 'GET:', google_url)
 
     driver.get(google_url)
@@ -43,7 +43,7 @@ def retrieve_ncode(driver, title):
     link_list = driver.find_elements_by_css_selector('div#search a')
 
     if not link_list:
-        return code
+        return code, None
 
     for link_elem in link_list[:5]:
         href = link_elem.get_attribute('href')
@@ -58,13 +58,28 @@ def retrieve_ncode(driver, title):
 
 
 def retrieve_novel_info(driver, ncode):
-    info_top_url = 'https://ncode.syosetu.com/novelview/infotop/ncode/{}/"'.format(ncode)
+    info_top_url = 'https://ncode.syosetu.com/novelview/infotop/ncode/{}/'.format(ncode)
     print(datetime.datetime.now().isoformat(), 'GET:', info_top_url)
 
     driver.get(info_top_url)
 
     novel_info = {
         'ncode': ncode,
+        'overview': '',
+        'author': '',
+        'keywords': '',
+        'category': '',
+        'created_at': '',
+        'updated_at': '',
+        'comment_count': '',
+        'review_count': '',
+        'bookmark_count': '',
+        'rating_total': '',
+        'rating': '',
+        'report': '',
+        'public': '',
+        'word_count': '',
+        'time': '',
         'success': False,
     }
 
@@ -123,10 +138,16 @@ if __name__ == '__main__':
 
     options = Options()
     options.add_argument('--headless')
-    options.add_argument('--incognito')
+    #options.add_argument('--incognito')
     driver = webdriver.Chrome(options=options)
 
+    exec_count = 0
+
     for i, book in enumerate(books):
+        if exec_count > 30:
+            print(datetime.datetime.now().isoformat(), 'Stop scraping as over limit')
+            break
+
         book_id = book[0]
         category = cache.get(book_id)
 
@@ -136,11 +157,17 @@ if __name__ == '__main__':
         else:
             ncode, elem = retrieve_ncode(driver, book[1])
 
+            exec_count += 1
+
             if not ncode:
-                print('Not found ncode.', book)
-                break
+                print(datetime.datetime.now().isoformat(), 'Not found:', book)
+                continue
 
             novel = retrieve_novel_info(driver, ncode)
+
+            if not novel['success']:
+                print(datetime.datetime.now().isoformat(), 'Retrieve failed:', book)
+                continue
 
             category = novel['category']
             cache[str(book_id)] = category

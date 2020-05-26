@@ -42,30 +42,35 @@ def retrieve_books(page):
             'downloaded': False,
         }
 
-        title_elem = item_elem.find_element_by_class_name('p-syuppan-list__title')
-        if title_elem:
-            book['title'] = title_elem.text
+        try:
+            title_elem = item_elem.find_element_by_class_name('p-syuppan-list__title')
+            if title_elem:
+                book['title'] = title_elem.text
 
-        img_elem = item_elem.find_element_by_tag_name('img')
-        if img_elem:
-            book['image_url'] = img_elem.get_attribute('src')
+            img_elem = item_elem.find_element_by_tag_name('img')
+            if img_elem:
+                book['image_url'] = img_elem.get_attribute('src')
 
-        link_elem = item_elem.find_element_by_tag_name('a')
-        if link_elem:
-            book['book_url'] = link_elem.get_attribute('href')
-            book['book_id'] = book['book_url'].replace('https://syosetu.com/syuppan/view/bookid/', '')
-            book['book_id'] = book['book_id'].replace('/', '')
+            link_elem = item_elem.find_element_by_tag_name('a')
+            if link_elem:
+                book['book_url'] = link_elem.get_attribute('href')
+                book['book_id'] = book['book_url'].replace(
+                    'https://syosetu.com/syuppan/view/bookid/', '')
+                book['book_id'] = book['book_id'].replace('/', '')
 
-        book['time'] = now_str
+            book['time'] = now_str
 
-        books.append(book)
+            books.append(book)
+
+        except Exception as e:
+            print(datetime.datetime.now().isoformat(), e, book['book_id'], book['title'])
 
     return books
 
 
 def scroll_down(driver):
     height = driver.execute_script("return document.body.scrollHeight")
-    scroll_y = 300
+    scroll_y = 150
 
     for x in range(scroll_y, height, scroll_y):
         driver.execute_script("window.scrollTo(0, "+str(x)+");")
@@ -93,7 +98,7 @@ if __name__ == '__main__':
     options.add_argument('--incognito')
     driver = webdriver.Chrome(options=options)
 
-    page_count = 2
+    page_count = 25
 
     for i in range(1, page_count + 1):
         for book in retrieve_books(i):
