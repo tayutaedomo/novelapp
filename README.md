@@ -1,5 +1,11 @@
 # novelapp
 
+## git lfs
+You have to execute the following commands as use git lfs.
+```
+$ git lfs install
+```
+
 ## Scraping Execution
 1. Create syuppan.csv
 ```
