@@ -1,4 +1,6 @@
 requests
 chromedriver-binary==81.0.4044.138.0
 selenium
+Flask==1.1.2
+Flask-HTTPAuth==4.0.0
 
