@@ -11,7 +11,7 @@ ROOT_PATH = os.path.abspath(ROOT_PATH)
 
 sys.path.append(ROOT_PATH)
 
-from scripts.utils.narou_category import NarouCategory
+from scripts.utils.category import NarouCategory
 
 NOVELS_CSV_PATH = os.path.join(ROOT_PATH, 'data', 'novels.csv')
 IMAGE_DIR_PATH = os.path.join(ROOT_PATH, 'data', 'images')
