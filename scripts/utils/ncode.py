@@ -2,6 +2,23 @@ import datetime
 import re
 
 
+class SyosetuSearch:
+    @classmethod
+    def get_ncode(cls, driver, title):
+        #base_url = 'https://yomou.syosetu.com/search.php?word={}&notword=&genre=&type=&mintime=&maxtime=&minlen=&maxlen=&min_globalpoint=&max_globalpoint=&minlastup=&maxlastup=&minfirstup=&maxfirstup=&order=new'
+        base_url = 'https://yomou.syosetu.com/search.php?word={}order=new'
+        url = base_url.format(title)
+
+        print(datetime.datetime.now().isoformat(), 'GET:', url)
+
+        driver.get(url)
+
+        matched_elem = None
+        code = None
+        link = driver.find_element_by_link_text('小説情報')
+        pass
+
+
 class GoogleSearch:
     @classmethod
     def get_ncode(cls, driver, title):

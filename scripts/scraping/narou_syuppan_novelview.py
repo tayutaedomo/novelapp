@@ -131,7 +131,7 @@ if __name__ == '__main__':
 
     for i, book in enumerate(books):
         #if exec_count > 30:
-        if exec_count > 3:
+        if exec_count > 1:
             print(datetime.datetime.now().isoformat(), 'Stop scraping as over limit')
             break
 
