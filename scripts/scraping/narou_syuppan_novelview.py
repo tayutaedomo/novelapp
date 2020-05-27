@@ -1,12 +1,20 @@
 import os
+import sys
 import time
 import datetime
-import re
 import csv
+import chromedriver_binary
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 ROOT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
+ROOT_PATH = os.path.abspath(ROOT_PATH)
+
+sys.path.append(ROOT_PATH)
+
+from scripts.utils.ncode import GoogleSearch
+
+
 SYUPPAN_CSV_PATH = os.path.join(ROOT_PATH, 'data', 'syuppan.csv')
 NOVELS_CSV_PATH = os.path.join(ROOT_PATH, 'data', 'novels.csv')
 
@@ -31,30 +39,8 @@ def create_cache():
     return cache
 
 
-def retrieve_ncode(driver, title):
-    google_url = 'https://www.google.com/search?q=site:ncode.syosetu.com {}'.format(title)
-    print(datetime.datetime.now().isoformat(), 'GET:', google_url)
-
-    driver.get(google_url)
-
-    matched_elem = None
-    code = None
-
-    link_list = driver.find_elements_by_css_selector('div#search a')
-
-    if not link_list:
-        return code, None
-
-    for link_elem in link_list[:5]:
-        href = link_elem.get_attribute('href')
-        matched = re.match(r'^https:\/\/ncode\.syosetu\.com\/(.+)\/$', href)
-
-        if matched:
-            matched_elem = link_elem
-            code = matched.group(1)
-            break
-
-    return code, matched_elem
+def get_ncode(driver, title):
+    return GoogleSearch.get_ncode(driver, title)
 
 
 def retrieve_novel_info(driver, ncode):
@@ -144,7 +130,8 @@ if __name__ == '__main__':
     exec_count = 0
 
     for i, book in enumerate(books):
-        if exec_count > 30:
+        #if exec_count > 30:
+        if exec_count > 3:
             print(datetime.datetime.now().isoformat(), 'Stop scraping as over limit')
             break
 
@@ -155,7 +142,7 @@ if __name__ == '__main__':
             print(datetime.datetime.now().isoformat(), 'Skip:', book_id, category)
 
         else:
-            ncode, elem = retrieve_ncode(driver, book[1])
+            ncode, elem = get_ncode(driver, book[1])
 
             exec_count += 1
 
