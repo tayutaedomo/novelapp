@@ -13,6 +13,7 @@ ROOT_PATH = os.path.abspath(ROOT_PATH)
 sys.path.append(ROOT_PATH)
 
 from scripts.utils.ncode import GoogleSearch
+from scripts.utils.ncode import SyosetuSearch
 
 
 SYUPPAN_CSV_PATH = os.path.join(ROOT_PATH, 'data', 'syuppan.csv')
@@ -21,6 +22,9 @@ NOVELS_CSV_PATH = os.path.join(ROOT_PATH, 'data', 'novels.csv')
 
 def load_syuppan_csv():
     books = []
+
+    if not os.path.exists(SYUPPAN_CSV_PATH):
+        return books
 
     with open(SYUPPAN_CSV_PATH, 'r', encoding='utf-8') as f:
         for row in csv.reader(f):
@@ -40,7 +44,8 @@ def create_cache():
 
 
 def get_ncode(driver, title):
-    return GoogleSearch.get_ncode(driver, title)
+    #return GoogleSearch.get_ncode(driver, title)
+    return SyosetuSearch.get_ncode(driver, title)
 
 
 def retrieve_novel_info(driver, ncode):
@@ -117,21 +122,20 @@ def append_novel_to_csv(book_id, category):
 
 if __name__ == '__main__':
     books = load_syuppan_csv()
-    print(datetime.datetime.now().isoformat(), 'Count:', len(books))
+    print(datetime.datetime.now().isoformat(), 'Book Count:', len(books))
 
     cache = create_cache()
-    print(datetime.datetime.now().isoformat(), 'Count:', len(cache))
+    print(datetime.datetime.now().isoformat(), 'Cache Count:', len(cache))
 
     options = Options()
-    options.add_argument('--headless')
-    #options.add_argument('--incognito')
+    #options.add_argument('--headless')
+    options.add_argument('--incognito')
     driver = webdriver.Chrome(options=options)
 
-    exec_count = 0
+    limit = 1
 
     for i, book in enumerate(books):
-        #if exec_count > 30:
-        if exec_count > 1:
+        if limit == 0:
             print(datetime.datetime.now().isoformat(), 'Stop scraping as over limit')
             break
 
@@ -142,9 +146,9 @@ if __name__ == '__main__':
             print(datetime.datetime.now().isoformat(), 'Skip:', book_id, category)
 
         else:
-            ncode, elem = get_ncode(driver, book[1])
+            limit -= 1
 
-            exec_count += 1
+            ncode, elem = get_ncode(driver, book[1])
 
             if not ncode:
                 print(datetime.datetime.now().isoformat(), 'Not found:', book)
