@@ -5,6 +5,7 @@ import re
 class SyosetuSearch:
     @classmethod
     def get_ncode(cls, driver, title):
+        title = re.split(r'\s', title)[0]
         base_url = 'https://yomou.syosetu.com/search.php?word={}&order=new'
         url = base_url.format(title)
 
@@ -18,7 +19,7 @@ class SyosetuSearch:
         try:
             link_elem = driver.find_element_by_link_text('小説情報')
             href = link_elem.get_attribute('href')
-            matched = re.match(r'^https:\/\/ncode\.syosetu\.com\/(.+)\/$', href)
+            matched = re.match(r'^https:\/\/ncode\.syosetu\.com\/novelview\/infotop\/ncode\/(.+)\/$', href)
 
             if matched:
                 matched_elem = link_elem

@@ -48,7 +48,7 @@ def get_ncode(driver, title):
     return SyosetuSearch.get_ncode(driver, title)
 
 
-def retrieve_novel_info(driver, ncode):
+def get_novel_info(driver, ncode):
     info_top_url = 'https://ncode.syosetu.com/novelview/infotop/ncode/{}/'.format(ncode)
     print(datetime.datetime.now().isoformat(), 'GET:', info_top_url)
 
@@ -154,7 +154,7 @@ if __name__ == '__main__':
                 print(datetime.datetime.now().isoformat(), 'Not found:', book)
                 continue
 
-            novel = retrieve_novel_info(driver, ncode)
+            novel = get_novel_info(driver, ncode)
 
             if not novel['success']:
                 print(datetime.datetime.now().isoformat(), 'Retrieve failed:', book)
