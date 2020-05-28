@@ -26,7 +26,7 @@ def make_directories():
 def load_novels_csv():
     novels = {}
 
-    if os.path.exists(NOVELS_CSV_PATH):
+    if not os.path.exists(NOVELS_CSV_PATH):
         return novels
 
     with open(NOVELS_CSV_PATH, 'r', encoding='utf-8') as f:

@@ -12,7 +12,7 @@ SYUPPAN_CSV_PATH = os.path.join(ROOT_PATH, 'data', 'syuppan.csv')
 def load_novels_csv():
     novels = []
 
-    if os.path.exists(SYUPPAN_CSV_PATH):
+    if not os.path.exists(SYUPPAN_CSV_PATH):
         return novels
 
     with open(SYUPPAN_CSV_PATH, 'r', encoding='utf-8') as f:
