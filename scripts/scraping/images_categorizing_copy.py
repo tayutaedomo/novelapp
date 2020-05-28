@@ -26,6 +26,9 @@ def make_directories():
 def load_novels_csv():
     novels = {}
 
+    if os.path.exists(NOVELS_CSV_PATH):
+        return novels
+
     with open(NOVELS_CSV_PATH, 'r', encoding='utf-8') as f:
         for row in csv.reader(f):
             novels[row[0]] = NarouCategory.to_num(row[1])
