@@ -1,18 +1,30 @@
 import os
+import sys
 import time
 import datetime
-import re
 import csv
+import chromedriver_binary
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 ROOT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
+ROOT_PATH = os.path.abspath(ROOT_PATH)
+
+sys.path.append(ROOT_PATH)
+
+from scripts.utils.ncode import GoogleSearch
+from scripts.utils.ncode import SyosetuSearch
+
+
 SYUPPAN_CSV_PATH = os.path.join(ROOT_PATH, 'data', 'syuppan.csv')
 NOVELS_CSV_PATH = os.path.join(ROOT_PATH, 'data', 'novels.csv')
 
 
 def load_syuppan_csv():
     books = []
+
+    if not os.path.exists(SYUPPAN_CSV_PATH):
+        return books
 
     with open(SYUPPAN_CSV_PATH, 'r', encoding='utf-8') as f:
         for row in csv.reader(f):
@@ -24,47 +36,26 @@ def load_syuppan_csv():
 def create_cache():
     cache = {}
 
+    if not os.path.exists(NOVELS_CSV_PATH):
+        return cache
+
     with open(NOVELS_CSV_PATH, 'r', encoding='utf-8') as f:
         for row in csv.reader(f):
-            cache[row[0]] = row[1]  # { book_id: category, ... }
+            cache[row[0]] = row[1]  # { book_id, result(0|1), category, ... }
 
     return cache
 
 
-def retrieve_ncode(driver, title):
-    google_url = 'https://www.google.com/search?q=site:ncode.syosetu.com {}'.format(title)
-    print(datetime.datetime.now().isoformat(), 'GET:', google_url)
-
-    driver.get(google_url)
-
-    matched_elem = None
-    code = None
-
-    link_list = driver.find_elements_by_css_selector('div#search a')
-
-    if not link_list:
-        return code, None
-
-    for link_elem in link_list[:5]:
-        href = link_elem.get_attribute('href')
-        matched = re.match(r'^https:\/\/ncode\.syosetu\.com\/(.+)\/$', href)
-
-        if matched:
-            matched_elem = link_elem
-            code = matched.group(1)
-            break
-
-    return code, matched_elem
+def get_ncode(driver, title):
+    #return GoogleSearch.get_ncode(driver, title)
+    return SyosetuSearch.get_ncode(driver, title)
 
 
-def retrieve_novel_info(driver, ncode):
-    info_top_url = 'https://ncode.syosetu.com/novelview/infotop/ncode/{}/'.format(ncode)
-    print(datetime.datetime.now().isoformat(), 'GET:', info_top_url)
-
-    driver.get(info_top_url)
-
-    novel_info = {
+def get_novel_info(driver, ncode):
+    novel = {
+        'result': 0,
         'ncode': ncode,
+        'title': '',
         'overview': '',
         'author': '',
         'keywords': '',
@@ -80,49 +71,69 @@ def retrieve_novel_info(driver, ncode):
         'public': '',
         'word_count': '',
         'time': '',
-        'success': False,
     }
 
-    td_list = driver.find_elements_by_css_selector('table#noveltable1 td')
+    if not ncode:
+        return novel
 
-    def normalize_text(elem):
+    info_top_url = 'https://ncode.syosetu.com/novelview/infotop/ncode/{}/'.format(ncode)
+    print(datetime.datetime.now().isoformat(), 'GET:', info_top_url)
+
+    driver.get(info_top_url)
+
+    def strip_text(elem):
         if not elem:
             return None
 
         if not elem.text:
             return None
 
-        return elem.text.replace('\n', ',').replace('\r\n', ',')
+        text = elem.text.replace('\n', ',').replace('\r\n', ',')
+        text.lstrip().rstrip()
+        return text
 
-    if td_list:
-        novel_info['overview'] = normalize_text(td_list[0])
-        novel_info['author'] = normalize_text(td_list[1])
-        novel_info['keywords'] = normalize_text(td_list[2])
-        novel_info['category'] = normalize_text(td_list[3])
+    try:
+        h1_elem = driver.find_element_by_css_selector('h1')
+        novel['title'] = h1_elem.text
 
-    td_list = driver.find_elements_by_css_selector('table#noveltable2 td')
+        td_list = driver.find_elements_by_css_selector('table#noveltable1 td')
 
-    if td_list:
-        novel_info['created_at'] = normalize_text(td_list[0])
-        novel_info['updated_at'] = normalize_text(td_list[1])
-        novel_info['comment_count'] = normalize_text(td_list[2])
-        novel_info['review_count'] = normalize_text(td_list[3])
-        novel_info['bookmark_count'] = normalize_text(td_list[4])
-        novel_info['rating_total'] = normalize_text(td_list[5])
-        novel_info['rating'] = normalize_text(td_list[6])
-        novel_info['report'] = normalize_text(td_list[7])
-        novel_info['public'] = normalize_text(td_list[8])
-        novel_info['word_count'] = normalize_text(td_list[9])
-        novel_info['time'] = datetime.datetime.now().isoformat()
-        novel_info['success'] = True
+        if td_list:
+            novel['overview'] = strip_text(td_list[0])
+            novel['author'] = strip_text(td_list[1])
+            novel['keywords'] = strip_text(td_list[2])
+            novel['category'] = strip_text(td_list[3])
 
-    return novel_info
+        td_list = driver.find_elements_by_css_selector('table#noveltable2 td')
+
+        if td_list:
+            novel['created_at'] = strip_text(td_list[0])
+            novel['updated_at'] = strip_text(td_list[1])
+            novel['comment_count'] = strip_text(td_list[2])
+            novel['review_count'] = strip_text(td_list[3])
+            novel['bookmark_count'] = strip_text(td_list[4])
+            novel['rating_total'] = strip_text(td_list[5])
+            novel['rating'] = strip_text(td_list[6])
+            novel['report'] = strip_text(td_list[7])
+            novel['public'] = strip_text(td_list[8])
+            novel['word_count'] = strip_text(td_list[9])
+            novel['time'] = datetime.datetime.now().isoformat()
+
+            novel['result'] = 1
+
+    except Exception as e:
+        print(datetime.datetime.now().isoformat(), e)
+
+    return novel
 
 
-def append_novel_to_csv(book_id, category):
-    csv_line = '"{}","{}"'.format(
+def append_novel_to_csv(book_id, novel):
+    csv_line = '"{}","{}","{}","{}","{}"'.format(
         book_id,
-        category,
+        novel.get('result'),
+        novel.get('category'),
+        novel.get('title'),
+        novel.get('keywords'),
     )
 
     with open(NOVELS_CSV_PATH, 'a') as f:
@@ -131,49 +142,45 @@ def append_novel_to_csv(book_id, category):
 
 if __name__ == '__main__':
     books = load_syuppan_csv()
-    print(datetime.datetime.now().isoformat(), 'Count:', len(books))
+    print(datetime.datetime.now().isoformat(), 'Book Count:', len(books))
 
     cache = create_cache()
-    print(datetime.datetime.now().isoformat(), 'Count:', len(cache))
+    print(datetime.datetime.now().isoformat(), 'Cache Count:', len(cache))
 
     options = Options()
     options.add_argument('--headless')
-    #options.add_argument('--incognito')
+    options.add_argument('--incognito')
     driver = webdriver.Chrome(options=options)
 
-    exec_count = 0
+    limit = 500
 
     for i, book in enumerate(books):
-        if exec_count > 30:
+        if limit == 0:
             print(datetime.datetime.now().isoformat(), 'Stop scraping as over limit')
             break
 
         book_id = book[0]
-        category = cache.get(book_id)
 
-        if category:
-            print(datetime.datetime.now().isoformat(), 'Skip:', book_id, category)
+        if cache.get(book_id):
+            print(datetime.datetime.now().isoformat(), 'Skip:', book_id)
 
         else:
-            ncode, elem = retrieve_ncode(driver, book[1])
+            limit -= 1
 
-            exec_count += 1
+            ncode, elem = get_ncode(driver, book[1])
 
             if not ncode:
                 print(datetime.datetime.now().isoformat(), 'Not found:', book)
-                continue
 
-            novel = retrieve_novel_info(driver, ncode)
+            novel = get_novel_info(driver, ncode)
 
-            if not novel['success']:
-                print(datetime.datetime.now().isoformat(), 'Retrieve failed:', book)
-                continue
+            if novel['result'] == 1:
+                cache[str(book_id)] = novel['result']
 
-            category = novel['category']
-            cache[str(book_id)] = category
-            print(datetime.datetime.now().isoformat(), 'New :', book_id, category)
+            print(datetime.datetime.now().isoformat(),
+                  'New :', book_id, novel['result'], novel['category'])
 
-            append_novel_to_csv(book_id, category)
+            append_novel_to_csv(book_id, novel)
 
             if i < len(books) - 1:
                 print(datetime.datetime.now().isoformat(), 'Sleep(3)')

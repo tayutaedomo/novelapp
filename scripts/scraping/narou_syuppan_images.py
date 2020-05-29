@@ -5,12 +5,15 @@ import csv
 import urllib.request
 
 ROOT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
-IMAGE_DIR_PATH = os.path.join(ROOT_PATH, 'data', 'images')
+IMAGE_DIR_PATH = os.path.join(ROOT_PATH, 'data', 'images', 'uncategorized')
 SYUPPAN_CSV_PATH = os.path.join(ROOT_PATH, 'data', 'syuppan.csv')
 
 
 def load_novels_csv():
     novels = []
+
+    if not os.path.exists(SYUPPAN_CSV_PATH):
+        return novels
 
     with open(SYUPPAN_CSV_PATH, 'r', encoding='utf-8') as f:
         for row in csv.reader(f):

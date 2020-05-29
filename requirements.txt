@@ -1,4 +1,4 @@
 requests
-chromedriver-binary==81.0.4044.138.0
-selenium
+chromedriver-binary==83.0.4103.39.0
+selenium==3.141.0
 
