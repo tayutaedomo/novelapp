@@ -5,7 +5,7 @@ import csv
 import urllib.request
 
 ROOT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
-IMAGE_DIR_PATH = os.path.join(ROOT_PATH, 'data', 'images')
+IMAGE_DIR_PATH = os.path.join(ROOT_PATH, 'data', 'images', 'uncategorized')
 SYUPPAN_CSV_PATH = os.path.join(ROOT_PATH, 'data', 'syuppan.csv')
 
 
