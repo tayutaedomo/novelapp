@@ -69,10 +69,15 @@ if __name__ == '__main__':
         file_name = os.path.basename(image_path)
         book_id = re.sub(r'(_.*$)', '', file_name)
         novel = novels.get(book_id)
+
+        if not novel:
+            print(datetime.datetime.now().isoformat(), 'Not Found Novel', file_name)
+            continue
+
         category_id = novel.get('category_id')
 
         if category_id is None:
-            print(datetime.datetime.now().isoformat(), 'Category is unknown', file_name, novel)
+            print(datetime.datetime.now().isoformat(), 'Unknown Category', file_name, novel)
             continue
 
         copy_image(image_path, str(category_id))
