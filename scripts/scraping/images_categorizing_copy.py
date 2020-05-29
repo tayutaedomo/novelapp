@@ -31,7 +31,12 @@ def load_novels_csv():
 
     with open(NOVELS_CSV_PATH, 'r', encoding='utf-8') as f:
         for row in csv.reader(f):
-            novels[row[0]] = NarouCategory.to_num(row[1])
+            book_id = row[0]
+            category_id = NarouCategory.to_num(row[2])
+
+            novels[book_id] = {
+                'category_id': category_id,
+            }
 
     return novels
 
@@ -61,10 +66,11 @@ if __name__ == '__main__':
     for image_path in get_image_paths():
         file_name = os.path.basename(image_path)
         book_id = re.sub(r'(_.*$)', '', file_name)
-        category_id = novels.get(book_id)
+        novel = novels.get(book_id)
+        category_id = novel.get('category_id')
 
-        if not category_id:
-            print(datetime.datetime.now().isoformat(), 'Category is unknown', file_name)
+        if category_id is None:
+            print(datetime.datetime.now().isoformat(), 'Category is unknown', file_name, novel)
             continue
 
         copy_image(image_path, str(category_id))
