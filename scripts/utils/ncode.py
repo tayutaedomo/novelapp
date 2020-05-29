@@ -5,9 +5,16 @@ import re
 class SyosetuSearch:
     @classmethod
     def get_ncode(cls, driver, title):
-        title = re.split(r'( \(|（|〈|～|〜|~|II|III|…)', title)[0]
         title = title.rstrip()
-        title = re.sub(r'(\d+巻|その\d+|\d+)$', '', title)
+        title = re.split(r'(:| \(|（|〈|～|〜|~|II|III|…|@|＠|―| 一)', title)[0]
+        title = title.rstrip()
+        title = re.split(r'\s\S+$', title)[0]
+        title = title.rstrip()
+        title = re.sub(r'(\d+巻|その\d+|Lesson\d+|\(\d+\)|\d+|[一二三四五六七八九]|[ⅡⅢⅣⅤⅥⅦⅧⅨ]|[①②③④⑤]|THE COMIC|COMIC)$', '', title)
+        title = title.rstrip()
+        title = re.sub(r'(「|」|”|")', ' ', title, 10)
+        title = title.lstrip()
+        title = title.rstrip()
         base_url = 'https://yomou.syosetu.com/search.php?word={}&order=new'
         url = base_url.format(title)
 
