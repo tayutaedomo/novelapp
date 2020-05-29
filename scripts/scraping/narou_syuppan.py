@@ -1,7 +1,9 @@
 import os
+import sys
 import time
 import datetime
 import csv
+import chromedriver_binary
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -19,7 +21,7 @@ def create_cache():
     return cache
 
 
-def retrieve_books(page):
+def get_books(page):
     books = []
 
     list_url = 'https://syosetu.com/syuppan/list/?p={}'.format(page)
@@ -90,6 +92,19 @@ def append_book_to_csv(book):
 
 
 if __name__ == '__main__':
+    page_start = 1
+    page_count = 25
+
+    if len(sys.argv) > 2:
+        page_start = int(sys.argv[1])
+        page_count = int(sys.argv[2])
+
+    elif len(sys.argv) > 1:
+        page_start = int(sys.argv[1])
+
+    page_end = page_start + page_count
+    print(datetime.datetime.now().isoformat(), 'Page:', page_start, 'to', page_end)
+
     cache = create_cache()
     print(datetime.datetime.now().isoformat(), 'Count:', len(cache))
 
@@ -98,10 +113,8 @@ if __name__ == '__main__':
     options.add_argument('--incognito')
     driver = webdriver.Chrome(options=options)
 
-    page_count = 25
-
-    for i in range(1, page_count + 1):
-        for book in retrieve_books(i):
+    for i in range(page_start, page_end + 1):
+        for book in get_books(i):
             book_id = book['book_id']
 
             if cache.get(book_id):
@@ -113,11 +126,11 @@ if __name__ == '__main__':
 
                 append_book_to_csv(book)
 
-        if i < page_count:
+        if i < page_end:
             print(datetime.datetime.now().isoformat(), 'Sleep(3)')
             time.sleep(3)
 
     # Capture
-    file_path = os.path.join(ROOT_PATH, 'tmp', 'capture.png')
-    driver.save_screenshot(file_path)
+    #file_path = os.path.join(ROOT_PATH, 'tmp', 'capture.png')
+    #driver.save_screenshot(file_path)
 
