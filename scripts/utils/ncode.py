@@ -5,7 +5,9 @@ import re
 class SyosetuSearch:
     @classmethod
     def get_ncode(cls, driver, title):
-        title = re.split(r'\s', title)[0]
+        title = re.split(r'( \(|（|〈|～|〜|~|II|III|…)', title)[0]
+        title = title.rstrip()
+        title = re.sub(r'(\d+巻|その\d+|\d+)$', '', title)
         base_url = 'https://yomou.syosetu.com/search.php?word={}&order=new'
         url = base_url.format(title)
 
