@@ -12,7 +12,7 @@ class SyosetuSearch:
         title = title.rstrip()
         title = re.sub(r'(\d+巻|その\d+|Lesson\d+|\(\d+\)|\d+|[一二三四五六七八九]|[ⅡⅢⅣⅤⅥⅦⅧⅨ]|[①②③④⑤]|THE COMIC|COMIC)$', '', title)
         title = title.rstrip()
-        title = re.sub(r'(「|」|”|")', ' ', title, 10)
+        title = re.sub(r'(「|」|”|"|<|>)', ' ', title, 10)
         title = title.lstrip()
         title = title.rstrip()
         base_url = 'https://yomou.syosetu.com/search.php?word={}&order=new'
