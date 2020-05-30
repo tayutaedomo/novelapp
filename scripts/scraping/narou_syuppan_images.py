@@ -9,17 +9,17 @@ IMAGE_DIR_PATH = os.path.join(ROOT_PATH, 'data', 'images', 'uncategorized')
 SYUPPAN_CSV_PATH = os.path.join(ROOT_PATH, 'data', 'syuppan.csv')
 
 
-def load_novels_csv():
-    novels = []
+def load_books_csv():
+    books = []
 
     if not os.path.exists(SYUPPAN_CSV_PATH):
-        return novels
+        return books
 
     with open(SYUPPAN_CSV_PATH, 'r', encoding='utf-8') as f:
         for row in csv.reader(f):
-            novels.append(row)
+            books.append(row)
 
-    return novels
+    return books
 
 
 def download_image(url, book_id):
@@ -28,18 +28,20 @@ def download_image(url, book_id):
     dest_path = os.path.join(IMAGE_DIR_PATH, dest_file_name)
 
     if os.path.exists(dest_path):
-        print(datetime.datetime.now().isoformat(), 'Skip:', org_file_name)
+        print(datetime.datetime.now().isoformat(), 'Skip:', book_id, org_file_name)
         return None
 
     else:
-        print(datetime.datetime.now().isoformat(), 'New :', org_file_name)
+        print(datetime.datetime.now().isoformat(), 'New :', book_id, org_file_name)
         urllib.request.urlretrieve(url, dest_path)
         return dest_path
 
 
 if __name__ == '__main__':
-    for novel in load_novels_csv():
-        result = download_image(novel[3], novel[0])
+    for book in load_books_csv():
+        book_id = book[0]
+        img_url = book[3]
+        result = download_image(img_url, book[0])
 
         if result:
             print(datetime.datetime.now().isoformat(), 'Sleep(3)')
