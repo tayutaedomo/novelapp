@@ -1,3 +1,6 @@
+import re
+
+
 class NarouCategory:
     categories = {
         'ハイファンタジー〔ファンタジー〕': 0,
@@ -65,5 +68,6 @@ class NarouCategory2:
 
     @classmethod
     def to_text(cls, num):
-        return cls.categories_reversed.get(num, 'ノンジャンル〔ノンジャンル〕')
+        text = cls.categories_reversed.get(num, 'ノンジャンル〔ノンジャンル〕')
+        return re.split(r'[〔〕]', text)[1]
 
